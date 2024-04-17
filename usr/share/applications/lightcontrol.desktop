@@ -1,0 +1,11 @@
+[Desktop Entry]
+Type=Application
+Name=Light Control
+Icon=video-television
+Exec=sudo /usr/bin/lightcontrol
+StartupNotify=true
+Terminal=false
+Categories=GTK;Settings;HardwareSettings;
+OnlyShowIn=LXDE;
+
+

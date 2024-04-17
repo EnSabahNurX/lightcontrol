@@ -1,0 +1,414 @@
+#!/usr/bin/python3
+# -*- coding: UTF-8 -*-
+
+
+import os
+import sys
+import gi
+import subprocess
+import re
+
+
+# Importing necessary modules from Gtk
+gi.require_version("Gtk", "3.0")
+from gi.repository import Gtk
+
+
+class BrightnessController(Gtk.Window):
+    """
+    A Gtk window for controlling display brightness and color temperature.
+    """
+
+    def __init__(self):
+        """
+        Initializes the BrightnessController window.
+        """
+        super().__init__(title="Display Control")
+        self.controller = None
+        self.controller_max = None
+        self.controller_cur = None
+        self.monitor_name = None
+        self.backlight_device = None
+        self.whitepoints = [
+            {"r": 1.00000000, "g": 0.18172716, "b": 0.00000001, "k": 1000},
+            {"r": 1.00000000, "g": 0.25503671, "b": 0.00000001, "k": 1100},
+            {"r": 1.00000000, "g": 0.30942099, "b": 0.00000001, "k": 1200},
+            {"r": 1.00000000, "g": 0.35357379, "b": 0.00000001, "k": 1300},
+            {"r": 1.00000000, "g": 0.39091524, "b": 0.00000001, "k": 1400},
+            {"r": 1.00000000, "g": 0.42322816, "b": 0.00000001, "k": 1500},
+            {"r": 1.00000000, "g": 0.45159884, "b": 0.00000001, "k": 1600},
+            {"r": 1.00000000, "g": 0.47675916, "b": 0.00000001, "k": 1700},
+            {"r": 1.00000000, "g": 0.49923747, "b": 0.00000001, "k": 1800},
+            {"r": 1.00000000, "g": 0.51943421, "b": 0.00000001, "k": 1900},
+            {"r": 1.00000000, "g": 0.54360078, "b": 0.08679949, "k": 2000},
+            {"r": 1.00000000, "g": 0.56618736, "b": 0.14065513, "k": 2100},
+            {"r": 1.00000000, "g": 0.58734976, "b": 0.18362641, "k": 2200},
+            {"r": 1.00000000, "g": 0.60724493, "b": 0.22137978, "k": 2300},
+            {"r": 1.00000000, "g": 0.62600248, "b": 0.25591950, "k": 2400},
+            {"r": 1.00000000, "g": 0.64373109, "b": 0.28819679, "k": 2500},
+            {"r": 1.00000000, "g": 0.66052319, "b": 0.31873863, "k": 2600},
+            {"r": 1.00000000, "g": 0.67645822, "b": 0.34786758, "k": 2700},
+            {"r": 1.00000000, "g": 0.69160518, "b": 0.37579588, "k": 2800},
+            {"r": 1.00000000, "g": 0.70602449, "b": 0.40267128, "k": 2900},
+            {"r": 1.00000000, "g": 0.71976951, "b": 0.42860152, "k": 3000},
+            {"r": 1.00000000, "g": 0.73288760, "b": 0.45366838, "k": 3100},
+            {"r": 1.00000000, "g": 0.74542112, "b": 0.47793608, "k": 3200},
+            {"r": 1.00000000, "g": 0.75740814, "b": 0.50145662, "k": 3300},
+            {"r": 1.00000000, "g": 0.76888303, "b": 0.52427322, "k": 3400},
+            {"r": 1.00000000, "g": 0.77987699, "b": 0.54642268, "k": 3500},
+            {"r": 1.00000000, "g": 0.79041843, "b": 0.56793692, "k": 3600},
+            {"r": 1.00000000, "g": 0.80053332, "b": 0.58884417, "k": 3700},
+            {"r": 1.00000000, "g": 0.81024551, "b": 0.60916971, "k": 3800},
+            {"r": 1.00000000, "g": 0.81957693, "b": 0.62893653, "k": 3900},
+            {"r": 1.00000000, "g": 0.82854786, "b": 0.64816570, "k": 4000},
+            {"r": 1.00000000, "g": 0.83717703, "b": 0.66687674, "k": 4100},
+            {"r": 1.00000000, "g": 0.84548188, "b": 0.68508786, "k": 4200},
+            {"r": 1.00000000, "g": 0.85347859, "b": 0.70281616, "k": 4300},
+            {"r": 1.00000000, "g": 0.86118227, "b": 0.72007777, "k": 4400},
+            {"r": 1.00000000, "g": 0.86860704, "b": 0.73688797, "k": 4500},
+            {"r": 1.00000000, "g": 0.87576611, "b": 0.75326132, "k": 4600},
+            {"r": 1.00000000, "g": 0.88267187, "b": 0.76921169, "k": 4700},
+            {"r": 1.00000000, "g": 0.88933596, "b": 0.78475236, "k": 4800},
+            {"r": 1.00000000, "g": 0.89576933, "b": 0.79989621, "k": 4900},
+            {"r": 1.00000000, "g": 0.90198155, "b": 0.81465425, "k": 5000},
+            {"r": 1.00000000, "g": 0.90998122, "b": 0.82903811, "k": 5100},
+            {"r": 1.00000000, "g": 0.91777676, "b": 0.84305822, "k": 5200},
+            {"r": 1.00000000, "g": 0.92537561, "b": 0.85672488, "k": 5300},
+            {"r": 1.00000000, "g": 0.93278407, "b": 0.87004740, "k": 5400},
+            {"r": 1.00000000, "g": 0.94000824, "b": 0.88303426, "k": 5500},
+            {"r": 1.00000000, "g": 0.94705303, "b": 0.89569304, "k": 5600},
+            {"r": 1.00000000, "g": 0.95392224, "b": 0.90803053, "k": 5700},
+            {"r": 1.00000000, "g": 0.96061993, "b": 0.92005382, "k": 5800},
+            {"r": 1.00000000, "g": 0.96714996, "b": 0.93176928, "k": 5900},
+            {"r": 1.00000000, "g": 0.97351551, "b": 0.94318363, "k": 6000},
+            {"r": 1.00000000, "g": 0.97971908, "b": 0.95430394, "k": 6100},
+            {"r": 1.00000000, "g": 0.98576318, "b": 0.96513656, "k": 6200},
+            {"r": 1.00000000, "g": 0.99165026, "b": 0.97568885, "k": 6300},
+            {"r": 1.00000000, "g": 0.99738270, "b": 0.98596729, "k": 6400},
+            {"r": 1.00000000, "g": 1.00000000, "b": 1.00000000, "k": 6500},
+            {"r": 0.95044223, "g": 0.99121596, "b": 1.00000000, "k": 6600},
+            {"r": 0.92714973, "g": 0.97613934, "b": 1.00000000, "k": 6700},
+            {"r": 0.90942156, "g": 0.96241804, "b": 1.00000000, "k": 6800},
+            {"r": 0.89468568, "g": 0.94966143, "b": 1.00000000, "k": 6900},
+            {"r": 0.88208379, "g": 0.93766253, "b": 1.00000000, "k": 7000},
+            {"r": 0.87110771, "g": 0.92628530, "b": 1.00000000, "k": 7100},
+            {"r": 0.86142492, "g": 0.91543745, "b": 1.00000000, "k": 7200},
+            {"r": 0.85282056, "g": 0.90505033, "b": 1.00000000, "k": 7300},
+            {"r": 0.84514586, "g": 0.89507333, "b": 1.00000000, "k": 7400},
+            {"r": 0.83829491, "g": 0.88546638, "b": 1.00000000, "k": 7500},
+            {"r": 0.83209307, "g": 0.87619763, "b": 1.00000000, "k": 7600},
+            {"r": 0.82646465, "g": 0.86724292, "b": 1.00000000, "k": 7700},
+            {"r": 0.82135451, "g": 0.85858439, "b": 1.00000000, "k": 7800},
+            {"r": 0.81671794, "g": 0.85020658, "b": 1.00000000, "k": 7900},
+            {"r": 0.81251888, "g": 0.84209553, "b": 1.00000000, "k": 8000},
+            {"r": 0.80872769, "g": 0.83423873, "b": 1.00000000, "k": 8100},
+            {"r": 0.80531834, "g": 0.82662421, "b": 1.00000000, "k": 8200},
+            {"r": 0.80226891, "g": 0.81924047, "b": 1.00000000, "k": 8300},
+            {"r": 0.79956090, "g": 0.81207752, "b": 1.00000000, "k": 8400},
+            {"r": 0.79717858, "g": 0.80512689, "b": 1.00000000, "k": 8500},
+            {"r": 0.79510711, "g": 0.79838066, "b": 1.00000000, "k": 8600},
+            {"r": 0.79333381, "g": 0.79183143, "b": 1.00000000, "k": 8700},
+            {"r": 0.79184723, "g": 0.78547229, "b": 1.00000000, "k": 8800},
+            {"r": 0.79063727, "g": 0.77929676, "b": 1.00000000, "k": 8900},
+            {"r": 0.78969429, "g": 0.77329876, "b": 1.00000000, "k": 9000},
+            {"r": 0.78900933, "g": 0.76747257, "b": 1.00000000, "k": 9100},
+            {"r": 0.78857316, "g": 0.76181287, "b": 1.00000000, "k": 9200},
+            {"r": 0.78837633, "g": 0.75631472, "b": 1.00000000, "k": 9300},
+            {"r": 0.78840947, "g": 0.75097356, "b": 1.00000000, "k": 9400},
+            {"r": 0.78866306, "g": 0.74578517, "b": 1.00000000, "k": 9500},
+            {"r": 0.78912700, "g": 0.74074560, "b": 1.00000000, "k": 9600},
+            {"r": 0.78979042, "g": 0.73585016, "b": 1.00000000, "k": 9700},
+            {"r": 0.79064264, "g": 0.73109440, "b": 1.00000000, "k": 9800},
+            {"r": 0.79167223, "g": 0.72647304, "b": 1.00000000, "k": 9900},
+            {"r": 0.79286706, "g": 0.72198191, "b": 1.00000000, "k": 10000},
+        ]
+        self.setup_ui()
+        self.check_root_access()
+        self.find_controller()
+        self.find_first_monitor()
+
+    def check_root_access(self):
+        """
+        Checks if the script is running with root privileges.
+        """
+        if os.geteuid() != 0:
+            self.show_alert("You need to be root to run this script.")
+            sys.exit()
+
+    def show_alert(self, message):
+        """
+        Displays an error message dialog.
+        """
+        dialog = Gtk.MessageDialog(
+            parent=self,
+            flags=0,
+            message_type=Gtk.MessageType.ERROR,
+            buttons=Gtk.ButtonsType.OK,
+            text=message,
+        )
+        dialog.connect("response", lambda dialog, response: dialog.destroy())
+        dialog.run()
+        dialog.destroy()
+
+    def find_first_monitor(self):
+        """
+        Finds the name of the first connected monitor.
+        """
+        try:
+            result = subprocess.run(["xrandr"], capture_output=True, text=True)
+            for line in result.stdout.split("\n"):
+                if " connected" in line:
+                    self.monitor_name = line.split()[0]
+                    return
+        except Exception as e:
+            print("Error:", e)
+
+    def find_controller(self):
+        """
+        Finds the backlight controller with the highest max_brightness.
+        """
+        best_max = 0
+        best = None
+        for f in os.listdir("/sys/class/backlight"):
+            path = os.path.join("/sys/class/backlight", f)
+            if os.path.exists(path):
+                try:
+                    with open(os.path.join(path, "max_brightness"), "r") as max_file:
+                        max_brightness = int(max_file.read().strip())
+                    if best_max < max_brightness:
+                        best_max = max_brightness
+                        best = f
+                except IOError:
+                    pass
+
+        if best:
+            self.controller = os.path.join("/sys/class/backlight", best)
+            with open(os.path.join(self.controller, "brightness"), "r") as cur_file:
+                self.controller_cur = int(cur_file.read().strip())
+            self.controller_max = best_max
+
+    def setup_ui(self):
+        """
+        Sets up the user interface.
+        """
+        self.set_border_width(10)
+        self.set_default_size(500, 100)
+
+        vbox = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=6)
+        self.add(vbox)
+
+        backlight_label = Gtk.Label(label="Select Backlight Device:")
+        vbox.pack_start(backlight_label, True, True, 0)
+        backlight_combo = Gtk.ComboBoxText()
+        backlight_combo.connect("changed", self.on_backlight_changed)
+        vbox.pack_start(backlight_combo, True, True, 0)
+        self.populate_backlight_combo(backlight_combo)
+        backlight_combo.set_active(0)
+
+        brightness_label = Gtk.Label(label="Brightness")
+        vbox.pack_start(brightness_label, True, True, 0)
+        brightness_percentage = (self.controller_cur / self.controller_max) * 100
+        step_increment = 100 / self.controller_max
+        brightness_adjustment = Gtk.Adjustment(
+            value=brightness_percentage,
+            lower=0,
+            upper=100,
+            step_increment=step_increment,
+        )
+        brightness_scale = Gtk.Scale(
+            orientation=Gtk.Orientation.HORIZONTAL,
+            adjustment=brightness_adjustment,
+        )
+        brightness_scale.set_digits(0)
+        brightness_scale.connect("value-changed", self.on_brightness_changed)
+        brightness_scale.set_value_pos(Gtk.PositionType.TOP)
+        brightness_scale.set_draw_value(True)
+        vbox.pack_start(brightness_scale, True, True, 0)
+
+        monitor_label = Gtk.Label(label="Select Monitor:")
+        vbox.pack_start(monitor_label, True, True, 0)
+        monitor_combo = Gtk.ComboBoxText()
+        monitor_combo.connect("changed", self.on_monitor_changed)
+        vbox.pack_start(monitor_combo, True, True, 0)
+        self.populate_monitor_combo(monitor_combo)
+        monitor_combo.set_active(0)
+
+        temperature_label = Gtk.Label(label="Temperature (K)")
+        vbox.pack_start(temperature_label, True, True, 0)
+        temperature_adjustment = Gtk.Adjustment(
+            value=self.get_gamma_values(),
+            lower=1000,
+            upper=10000,
+            step_increment=100,
+        )
+        self.temperature_scale = Gtk.Scale(
+            orientation=Gtk.Orientation.HORIZONTAL,
+            adjustment=temperature_adjustment,
+        )
+        self.temperature_scale.set_digits(0)
+        self.temperature_scale.connect("value-changed", self.on_temperature_changed)
+        self.temperature_scale.set_value_pos(Gtk.PositionType.TOP)
+        self.temperature_scale.set_draw_value(True)
+        vbox.pack_start(self.temperature_scale, True, True, 0)
+
+        color_temp_box = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=6)
+        vbox.pack_start(color_temp_box, True, True, 0)
+        normal_button = Gtk.Button(label="Day")
+        normal_button.connect("clicked", self.on_normal_button_clicked)
+        color_temp_box.pack_start(normal_button, True, True, 0)
+        night_button = Gtk.Button(label="Night")
+        night_button.connect("clicked", self.on_night_button_clicked)
+        color_temp_box.pack_start(night_button, True, True, 0)
+
+    def populate_monitor_combo(self, combo):
+        """
+        Populates the monitor combo box with available monitor names.
+        """
+        try:
+            result = subprocess.run(["xrandr"], capture_output=True, text=True)
+            for line in result.stdout.split("\n"):
+                if " connected" in line:
+                    monitor_name = line.split()[0]
+                    combo.append_text(monitor_name)
+        except Exception as e:
+            print("Error populating monitor combo:", e)
+
+    def on_monitor_changed(self, combo):
+        """
+        Handles the monitor combo box change event.
+        """
+        tree_iter = combo.get_active_iter()
+        if tree_iter is not None:
+            model = combo.get_model()
+            self.monitor_name = model[tree_iter][0]
+
+    def populate_backlight_combo(self, combo):
+        """
+        Populates the backlight combo box with available backlight devices.
+        """
+        backlight_dir = "/sys/class/backlight"
+        if os.path.isdir(backlight_dir):
+            for device in os.listdir(backlight_dir):
+                combo.append_text(device)
+
+    def on_backlight_changed(self, combo):
+        """
+        Handles the backlight combo box change event.
+        """
+        tree_iter = combo.get_active_iter()
+        if tree_iter is not None:
+            model = combo.get_model()
+            self.backlight_device = model[tree_iter][0]
+            self.find_controller()
+
+    def on_brightness_changed(self, scale):
+        """
+        Handles the brightness scale value change event.
+        """
+        value = scale.get_value()
+        self.set_brightness(value)
+
+    def on_temperature_changed(self, scale):
+        """
+        Handles the temperature scale value change event.
+        """
+        value = scale.get_value()
+        self.set_temperature(value)
+
+    def on_normal_button_clicked(self, button):
+        """
+        Handles the "Day" button click event.
+        """
+        self.time_color("normal")
+        # Set the value of the temperature scale
+        self.temperature_scale.set_value(self.get_gamma_values())
+
+    def on_night_button_clicked(self, button):
+        """
+        Handles the "Night" button click event.
+        """
+        self.time_color("night")
+        # Set the value of the temperature scale
+        self.temperature_scale.set_value(self.get_gamma_values())
+
+    def time_color(self, mode):
+        """
+        Changes the color temperature based on the selected mode.
+        """
+        if mode == "normal":
+            subprocess.run(
+                ["xrandr", "--output", self.monitor_name, "--gamma", "1:1:1"]
+            )
+        elif mode == "night":
+            subprocess.run(
+                ["xrandr", "--output", self.monitor_name, "--gamma", "1:0.77:0.54"]
+            )
+
+    def set_brightness(self, percent):
+        """
+        Sets the brightness level of the display.
+
+        Args:
+            percent (float): The brightness percentage to set.
+        """
+        max_brightness = self.controller_max
+        value = int(percent * max_brightness / 100)
+        with open(os.path.join(self.controller, "brightness"), "w") as brightness_file:
+            brightness_file.write(str(value))
+
+    def set_temperature(self, temperature):
+        """
+        Sets the color temperature of the display.
+
+        Args:
+            temperature (int): The color temperature to set, in Kelvin.
+        """
+        index = int((temperature - 1000) / 100)
+        if 0 <= index < len(self.whitepoints):
+            whitepoint = self.whitepoints[index]
+            gamma_value = f"{whitepoint['r']}:{whitepoint['g']}:{whitepoint['b']}"
+            subprocess.run(
+                ["xrandr", "--output", self.monitor_name, "--gamma", gamma_value]
+            )
+
+    def get_gamma_values(self):
+        try:
+            # Execute the command and capture the output
+            output = subprocess.check_output(["xrandr", "--verbose"]).decode("utf-8")
+            # Use regular expression to find the line containing "Gamma"
+            gamma_line = re.search(r"Gamma:\s+(.*)", output)
+            if gamma_line:
+                # Extract gamma values from the line
+                gamma_values = gamma_line.group(1).strip()
+
+                # gamma values returned by xrandr --verbose are somehow inverted
+                # https://gitlab.freedesktop.org/xorg/app/xrandr/issues/33
+                # this algorithm corrects this bug by reverting the calculation
+                inv_r, inv_g, inv_b = gamma_values.split(":")
+                r = round(1 / float(inv_r), 10)
+                g = round(1 / float(inv_g), 10)
+                b = round(1 / float(inv_b), 10)
+
+                # Compare gamma values with self.whitepoints
+                min_distance = float("inf")
+                matched_k = None
+                for point in self.whitepoints:
+                    distance = (
+                        abs(point["r"] - r) + abs(point["g"] - g) + abs(point["b"] - b)
+                    )
+                    if distance < min_distance:
+                        min_distance = distance
+                        matched_k = point["k"]
+
+                return matched_k
+            else:
+                return None
+        except subprocess.CalledProcessError:
+            return None
+
+
+if __name__ == "__main__":
+    win = BrightnessController()
+    win.connect("destroy", Gtk.main_quit)
+    win.show_all()
+    Gtk.main()
