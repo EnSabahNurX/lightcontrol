@@ -26,22 +26,16 @@ The program is a Gtk-based application for controlling display brightness and co
 1. **Clone the repository:**
    ```bash
    git clone https://github.com/EnSabahNurX/lightcontrol/
-
-
 2. **Navigate to the project directory:**
    ```bash
    cd lightcontrol
-
 3. **Install dependencies:**
    ```bash
    sudo apt-get install python3-gi
-
-
 ### Usage
 1. **Run the program:**
    ```bash
-   sudo ./lightcontrol 
-
+   sudo ./usr/bin/lightcontrol
 2. **Adjust Brightness:**
  - Use the brightness scale slider to adjust brightness level.
 3. **Modify Color Temperature:**
@@ -49,8 +43,6 @@ The program is a Gtk-based application for controlling display brightness and co
  - Click "Day" or "Night" buttons to switch between predefined color temperature settings.
 4. **Select Monitor and Backlight Device:**
  - Choose the monitor and backlight device from the dropdown menus.
-
-
 ### Alternative installation
 1. **Build a dpkg file to install it. Do this command below outside of the folder containg the cloned data from github:**
    ```bash
@@ -63,3 +55,8 @@ The program is a Gtk-based application for controlling display brightness and co
  - Ensure the script is run with root privileges for proper functionality.
  - The program supports Debian and Ubuntu-based distributions.
  - For advanced users, the code can be customized further to suit specific requirements.
+
+ ## Licence
+This project is licensed under the MIT License
+## Acknowledgements
+Special thanks to the developers of the LXDE project and the Gtk library.
