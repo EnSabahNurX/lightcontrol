@@ -51,6 +51,14 @@ The program is a Gtk-based application for controlling display brightness and co
  - Choose the monitor and backlight device from the dropdown menus.
 
 
+### Alternative installation
+1. **Build a dpkg file to install it. Do this command below outside of the folder containg the cloned data from github:**
+   ```bash
+   dpkg --build lightcontrol
+1. **Install using dpkg:**
+   ```bash
+   dpkg -i lightcontrol.deb
+   sudo apt install -f
 ### Notes
  - Ensure the script is run with root privileges for proper functionality.
  - The program supports Debian and Ubuntu-based distributions.
