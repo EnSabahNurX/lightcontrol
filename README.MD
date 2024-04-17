@@ -9,4 +9,4 @@ The Light Control App is a Python application designed to provide users with eas
 - Control display brightness
 - Adjust display color temperature
 - Intuitive user interface with Gtk
-- Supports Debian and ubuntu based distros
+- Supports Debian and Ubuntu based distros
