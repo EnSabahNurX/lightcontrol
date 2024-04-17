@@ -40,7 +40,7 @@ The program is a Gtk-based application for controlling display brightness and co
 ### Usage
 1. **Run the program:**
    ```bash
-   ./lightcontrol 
+   sudo ./lightcontrol 
 
 2. **Adjust Brightness:**
  - Use the brightness scale slider to adjust brightness level.
