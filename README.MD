@@ -30,7 +30,7 @@ The program is a Gtk-based application for controlling display brightness and co
 
 2. **Navigate to the project directory:**
    ```bash
-   cd brightness-controller
+   cd lightcontrol
 
 3. **Install dependencies:**
    ```bash
@@ -40,7 +40,7 @@ The program is a Gtk-based application for controlling display brightness and co
 ### Usage
 1. **Run the program:**
    ```bash
-   python3 brightness_controller.py
+   ./lightcontrol 
 
 2. **Adjust Brightness:**
  - Use the brightness scale slider to adjust brightness level.
