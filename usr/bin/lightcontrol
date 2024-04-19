@@ -402,9 +402,11 @@ class BrightnessController(Gtk.Window):
 
                 return matched_k
             else:
-                return None
+                # If gamma values couldn't be retrieved, return a default value
+                return 6500  # Default temperature of 6500K
         except subprocess.CalledProcessError:
-            return None
+            # If xrandr command fails, return a default value
+            return 6500  # Default temperature of 6500K
 
 
 if __name__ == "__main__":
